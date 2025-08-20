@@ -2,7 +2,7 @@
   "rosa-classic-public": {
     "day1-profile": {
       "Description": "rosa classic public cluster with base configuration",
-      "ClusterName": "apechaclassicrosa",
+      "ClusterName": "cyp-rosa-classic-default-sz-public-profile",
       "ControlPlaneType": "Classic architecture",
       "Type": "ROSA",
       "Region": "us-west-2, US West, Oregon",

@@ -35,7 +35,6 @@ class ClusterRolesAndAccess extends Page {
       cy.get('button[aria-label="Kebab toggle"]').click({ force: true });
     });
     cy.get('button[role="menuitem"]').contains('Delete').click({ force: true });
-    //cy.get('button[data-testid="btn-pirmary"]').contains('Delete').click({force: true});
   }
 
   isTextContainsInPage(text, present = true) {
