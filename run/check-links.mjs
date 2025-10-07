@@ -12,11 +12,11 @@
  * - Color-coded output for easy identification of issues
  * - Multiple output modes (default, verbose, redirects-only)
  */
-
+import fs from 'fs';
 import fetch from 'node-fetch';
 import ProgressBar from 'progress';
 
-import { getFlatUrls } from '../src/common/installLinks.mjs';
+import { getAllExternalLinks } from '../src/common/urlUtils.mjs';
 
 // ======================================================================
 // CONFIGURATION
@@ -61,10 +61,6 @@ Options:
   -v, --verbose  Show detailed URL listings for all categories
                  (By default, only error URLs are displayed)
   -r, --redirects Show ONLY redirected URLs with their redirect targets
-
-URL Source:
-  URLs are obtained automatically from the getFlatUrls() function in
-  '../src/common/installLinks.mjs' which extracts URLs from the project.
 
 Output:
   The script categorizes URLs by their HTTP status:
@@ -753,7 +749,7 @@ async function main() {
   console.log('Checking URLs...');
 
   // Get URLs to check
-  const urls = await getFlatUrls();
+  const urls = await getAllExternalLinks();
   console.log(`Found ${urls.length} URLs to check`);
 
   // Create a progress bar
@@ -796,6 +792,14 @@ async function main() {
 
   // Display the results
   displayResults(statusByUrl, redirectItems, verboseMode, redirectsMode);
+
+  const has404 = Object.values(statusByUrl).filter(
+    (result) => typeof result === 'number' && result === 404,
+  );
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `has404=${has404.length > 0}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `notFoundLength=${has404.length}\n`);
+  }
 }
 
 // ======================================================================

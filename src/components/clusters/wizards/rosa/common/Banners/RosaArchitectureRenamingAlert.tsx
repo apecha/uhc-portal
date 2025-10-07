@@ -7,7 +7,7 @@ import ExternalLink from '~/components/common/ExternalLink';
 import { ROSA_ARCHITECTURE_RENAMING_ALERT } from '~/queries/featureGates/featureConstants';
 import { useFeatureGate } from '~/queries/featureGates/useFetchFeatureGate';
 
-const RosaArchitectureRenamingAlert = () => {
+const RosaArchitectureRenamingAlert = ({ className }: { className?: string }) => {
   const allowAlert = useFeatureGate(ROSA_ARCHITECTURE_RENAMING_ALERT);
 
   const learnMoreLink = links.ROSA_ARCHITECTURE_RENAMING_KNOWLEDGE_BASE_ARTICLE;
@@ -15,8 +15,10 @@ const RosaArchitectureRenamingAlert = () => {
   return allowAlert ? (
     <Alert
       variant="info"
+      isInline
       title="Red Hat OpenShift Service on AWS (ROSA) architectures are being renamed"
       actionLinks={<ExternalLink href={learnMoreLink}>Learn more</ExternalLink>}
+      className={className}
     >
       <List>
         <ListItem>

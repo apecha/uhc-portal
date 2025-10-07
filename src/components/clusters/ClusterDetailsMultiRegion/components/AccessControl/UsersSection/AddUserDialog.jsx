@@ -5,13 +5,13 @@ import { useDispatch } from 'react-redux';
 import { Form, FormGroup, Radio, TextInput } from '@patternfly/react-core';
 
 import { FormGroupHelperText } from '~/components/common/FormGroupHelperText';
+import Modal from '~/components/common/Modal/Modal';
 import { refetchUsers } from '~/queries/ClusterDetailsQueries/AccessControlTab/UserQueries/useFetchUsers';
 
 import links from '../../../../../../common/installLinks.mjs';
 import { checkUserID } from '../../../../../../common/validators';
 import ErrorBox from '../../../../../common/ErrorBox';
 import ExternalLink from '../../../../../common/ExternalLink';
-import Modal from '../../../../../common/Modal/Modal';
 import { modalActions } from '../../../../../common/Modal/ModalActions';
 
 const AddUserDialog = ({
@@ -127,7 +127,9 @@ const AddUserDialog = ({
                     {isROSA ? 'Service on AWS' : 'Dedicated'}. Users can perform administrative
                     actions listed in the{' '}
                     <ExternalLink
-                      href={isROSA ? links.ROSA_ADMIN_ROLE : links.OSD_DEDICATED_ADMIN_ROLE}
+                      href={
+                        isROSA ? links.ROSA_AWS_IAM_OPERATOR_ROLES : links.OSD_DEDICATED_ADMIN_ROLE
+                      }
                     >
                       documentation
                     </ExternalLink>

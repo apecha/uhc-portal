@@ -18,6 +18,7 @@
 /vendor/
 backend-config.yml
 /cypress/screenshots/
+/cypress/downloads/
 /cypress/videos/
 /cypress/downloads/
 /coverage/
@@ -38,3 +39,5 @@ openapi/*.json
 .env*
 
 /unitTestCoverage
+
+.cache/

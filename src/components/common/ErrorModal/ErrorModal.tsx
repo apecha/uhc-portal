@@ -1,13 +1,8 @@
 import React, { ComponentProps } from 'react';
 
-import { Title } from '@patternfly/react-core';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/esm/t_global_icon_color_status_danger_default';
-
 import ErrorDetailsDisplay from '~/components/common/ErrorDetailsDisplay';
+import Modal from '~/components/common/Modal/Modal';
 import { ErrorState } from '~/types/types';
-
-import Modal from '../Modal/Modal';
 
 export type ErrorModalProps = {
   title: string;
@@ -30,15 +25,10 @@ const ErrorModal = ({
 
   return (
     <Modal
-      header={
-        <Title headingLevel="h2" size="2xl">
-          <ExclamationCircleIcon color={dangerColor.value} /> {title}
-        </Title>
-      }
+      title={title}
+      titleIconVariant="danger"
       primaryText="Close"
       onPrimaryClick={close}
-      onClose={close}
-      showClose={false}
       showSecondary={false}
       aria-label={title}
     >

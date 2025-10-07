@@ -6,10 +6,9 @@ import PropTypes from 'prop-types';
 import { Button, Icon, Popover, PopoverPosition } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { t_global_icon_color_status_danger_default as dangerColor } from '@patternfly/react-tokens/dist/esm/t_global_icon_color_status_danger_default';
-import { t_global_icon_color_status_warning_default as warningColor } from '@patternfly/react-tokens/dist/esm/t_global_icon_color_status_warning_default';
 import { DateFormat } from '@redhat-cloud-services/frontend-components/DateFormat';
 
+import supportLinks from '~/common/supportLinks.mjs';
 import { SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel } from '~/types/accounts_mgmt.v1';
 
 import { getTrialEndDate, getTrialExpiresInDays } from '../../../../common/getTrialExpiresDates';
@@ -49,8 +48,8 @@ function ClusterCreatedIndicator({ cluster }) {
           isInline
           className="pf-v6-u-display-inline-flex"
           icon={
-            <Icon>
-              <ExclamationTriangleIcon color={warningColor.value} />
+            <Icon status="warning">
+              <ExclamationTriangleIcon />
             </Icon>
           }
         >
@@ -86,8 +85,8 @@ function ClusterCreatedIndicator({ cluster }) {
           isInline
           className="pf-v6-u-display-inline-flex"
           icon={
-            <Icon>
-              <ExclamationCircleIcon color={dangerColor.value} />
+            <Icon status="danger">
+              <ExclamationCircleIcon />
             </Icon>
           }
         >
@@ -110,10 +109,7 @@ function ClusterCreatedIndicator({ cluster }) {
           <DateFormat date={subscription.eval_expiration_date} type="onlyDate" />
         </strong>
         .&nbsp;Your cluster is not&nbsp;
-        <ExternalLink
-          href="https://access.redhat.com/support/policy/updates/openshift/policies"
-          noIcon
-        >
+        <ExternalLink href={supportLinks.OPENSHIFT_POLICY_UPDATES} noIcon>
           supported
         </ExternalLink>
         . To get Red Hat support for clusters, learn more about{' '}
@@ -139,8 +135,8 @@ function ClusterCreatedIndicator({ cluster }) {
         isInline
         className="pf-v6-u-display-inline-flex"
         icon={
-          <Icon>
-            <ExclamationTriangleIcon color={warningColor.value} />
+          <Icon status="warning">
+            <ExclamationTriangleIcon />
           </Icon>
         }
       >

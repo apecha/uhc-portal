@@ -3,7 +3,19 @@ import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 
-import { Alert, Button, Flex, Spinner, Split, SplitItem, Title } from '@patternfly/react-core';
+import {
+  Alert,
+  Badge,
+  Button,
+  ExpandableSection,
+  Flex,
+  FlexItem,
+  Skeleton,
+  Spinner,
+  Split,
+  SplitItem,
+  Title,
+} from '@patternfly/react-core';
 import { useAddNotification } from '@redhat-cloud-services/frontend-components-notifications';
 
 import getClusterName from '~/common/getClusterName';
@@ -16,6 +28,7 @@ import { HAS_USER_DISMISSED_RECOMMENDED_OPERATORS_ALERT } from '~/common/localSt
 import { useNavigate } from '~/common/routing';
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import { PreviewLabel } from '~/components/clusters/common/PreviewLabel';
+import { RosaArchitectureRenamingAlert } from '~/components/clusters/wizards/rosa/common/Banners/RosaArchitectureRenamingAlert';
 import Breadcrumbs from '~/components/common/Breadcrumbs';
 import ButtonWithTooltip from '~/components/common/ButtonWithTooltip';
 import { modalActions } from '~/components/common/Modal/ModalActions';
@@ -26,6 +39,7 @@ import { refreshClusterDetails } from '~/queries/refreshEntireCache';
 import {
   SubscriptionCommonFieldsCluster_billing_model as SubscriptionCommonFieldsClusterBillingModel,
   SubscriptionCommonFieldsStatus,
+  SubscriptionCommonFieldsSupport_level as SubscriptionCommonFieldsSupportLevel,
 } from '~/types/accounts_mgmt.v1';
 
 import ClusterActionsDropdown from '../../../common/ClusterActionsDropdown';
@@ -36,7 +50,7 @@ import clusterStates, {
 } from '../../../common/clusterStates';
 import ErrorTriangle from '../../../common/ErrorTriangle';
 import HibernatingClusterCard from '../../../common/HibernatingClusterCard/HibernatingClusterCard';
-import { shouldShowLogs } from '../Overview/InstallationLogView';
+import InstallationLogView, { shouldShowLogs } from '../Overview/InstallationLogView';
 
 import ClusterNonEditableAlert from './components/ClusterNonEditableAlert';
 import ClusterProgressCard from './components/ClusterProgressCard';
@@ -118,9 +132,9 @@ function ClusterDetailsTop(props) {
   );
 
   let topCard = null;
-
   // Temporary solution needs update inside the component. (class based into functional) - OCMUI-2357
   const { openModal } = modalActions;
+  const isUninstalling = cluster.state === clusterStates.uninstalling;
 
   if (isHibernating(cluster)) {
     topCard = <HibernatingClusterCard cluster={cluster} openModal={openModal} />;
@@ -129,7 +143,20 @@ function ClusterDetailsTop(props) {
     !isAssistedInstallSubscription(cluster.subscription) &&
     (shouldShowLogs(cluster) || hasInflightEgressErrors(cluster))
   ) {
-    topCard = <ClusterProgressCard cluster={cluster} regionalInstance={regionalInstance} />;
+    topCard =
+      cluster.state === clusterStates.error ? (
+        <Alert
+          variant="danger"
+          isInline
+          title="Cluster is in an error state."
+          className="pf-v6-u-mt-md"
+        >
+          <p>You can use the logs and network validation to diagnose the problem:</p>
+          <InstallationLogView isExpandable={!isUninstalling} cluster={cluster} />
+        </Alert>
+      ) : (
+        <ClusterProgressCard cluster={cluster} regionalInstance={regionalInstance} />
+      );
   }
 
   const dispatch = useDispatch();
@@ -143,6 +170,8 @@ function ClusterDetailsTop(props) {
       SubscriptionCommonFieldsClusterBillingModel.marketplace;
   const isOSD = get(cluster, 'subscription.plan.type') === normalizedProducts.OSD;
   const isROSA = get(cluster, 'subscription.plan.type') === normalizedProducts.ROSA;
+  const isOCP = get(cluster, 'subscription.plan.type') === normalizedProducts.OCP;
+  const supportLevel = get(cluster, 'subscription.support_level');
   const clusterName = getClusterName(cluster);
   const consoleURL = cluster.console ? cluster.console.url : false;
   const creationDateStr = get(cluster, 'creation_timestamp', '');
@@ -302,6 +331,48 @@ function ClusterDetailsTop(props) {
     shouldShowStatusMonitor,
   ]);
 
+  // Alerts
+  const [isExpanded, setIsExpanded] = useState(false);
+  const updateIsExpanded = () => setIsExpanded(!isExpanded);
+
+  const hasRosaRenamingAlert = isROSA;
+  const [hasLimitedSupportAlert, setHasLimitedSupportAlert] = React.useState(false);
+  const [hasStatusMonitorAlert, setHasStatusMonitorAlert] = React.useState(false);
+  const hasIDPAlert = showIDPMessage;
+  const hasExpirationAlert = !!cluster.expiration_timestamp;
+  const hasTrialExpirationAlert = !!trialEndDate && !isDeprovisioned;
+  const hasOsdRHMEEndDateAlert = OSDRHMEndDate && !isDeprovisioned;
+  const hasGCPOrgPolicyAlert = !!showGcpOrgPolicyWarning;
+  const hasSubscriptionCompliancyAlert =
+    isOCP &&
+    !isArchived &&
+    !isDeprovisioned &&
+    (supportLevel === SubscriptionCommonFieldsSupportLevel.Eval ||
+      supportLevel === SubscriptionCommonFieldsSupportLevel.None);
+  const hasClusterNonEditableAlert = !cluster.canEdit && isAvailableAssistedInstallCluster(cluster);
+  const hasReccomendedOperatorsAlert = showRecommendedOperatorsAlert;
+  const [hasTermsAlert, setHasTermsAlert] = React.useState(false);
+  const [hasTransferClusterOwnershipAlert, setHasTransferClusterOwnershipAlert] =
+    React.useState(false);
+
+  const alerts = [
+    hasRosaRenamingAlert,
+    hasLimitedSupportAlert,
+    hasStatusMonitorAlert,
+    hasIDPAlert,
+    hasExpirationAlert,
+    hasTrialExpirationAlert,
+    hasOsdRHMEEndDateAlert,
+    hasGCPOrgPolicyAlert,
+    hasSubscriptionCompliancyAlert,
+    hasClusterNonEditableAlert,
+    hasReccomendedOperatorsAlert,
+    hasTermsAlert,
+    hasTransferClusterOwnershipAlert,
+  ];
+
+  const alertsCount = alerts.filter((alert) => alert === true).length || null;
+
   return (
     <div id="cl-details-top" className="top-row">
       <Split>
@@ -353,55 +424,91 @@ function ClusterDetailsTop(props) {
 
       {topCard}
 
-      <LimitedSupportAlert
-        limitedSupportReasons={cluster.limitedSupportReasons}
-        isOSD={isOSD}
-        isROSA={isROSA}
-      />
+      {pending ? (
+        <Skeleton />
+      ) : (
+        alertsCount && (
+          <ExpandableSection
+            id="alerts-expandable-section"
+            displaySize="lg"
+            className="pf-v6-u-mt-md"
+            onToggle={updateIsExpanded}
+            toggleContent={
+              <Flex>
+                <FlexItem>Alerts and recommendations</FlexItem>
 
-      {/* TODO: Part of installation story */}
-      {shouldShowStatusMonitor ? (
-        <ClusterStatusMonitor region={region} refresh={refreshFunc} cluster={cluster} />
-      ) : null}
+                <FlexItem>
+                  <Badge data-testid="alerts-badge">{alertsCount}</Badge>
+                </FlexItem>
+              </Flex>
+            }
+          >
+            {isROSA ? <RosaArchitectureRenamingAlert className="pf-v6-u-mt-md" /> : null}
 
-      {showIDPMessage && (
-        <Split>
-          <SplitItem isFilled>
-            <IdentityProvidersHint />
-          </SplitItem>
-        </Split>
-      )}
-      {cluster.expiration_timestamp && (
-        <ExpirationAlert expirationTimestamp={cluster.expiration_timestamp} />
-      )}
-      {trialEndDate && !isDeprovisioned && (
-        <ExpirationAlert expirationTimestamp={trialEndDate} {...trialExpirationUpgradeProps} />
-      )}
-      {OSDRHMEndDate && !isDeprovisioned && (
-        <ExpirationAlert expirationTimestamp={OSDRHMEndDate} OSDRHMExpiration />
-      )}
-      {showGcpOrgPolicyWarning && <GcpOrgPolicyAlert summary={gcpOrgPolicyWarning} />}
+            <LimitedSupportAlert
+              limitedSupportReasons={cluster.limitedSupportReasons}
+              isOSD={isOSD}
+              isROSA={isROSA}
+              setHasLimitedSupportAlert={setHasLimitedSupportAlert}
+            />
 
-      <SubscriptionCompliancy
-        cluster={cluster}
-        openModal={openModal}
-        canSubscribeOCP={canSubscribeOCP}
-      />
-      {!cluster.canEdit && isAvailableAssistedInstallCluster(cluster) && (
-        <ClusterNonEditableAlert />
+            {shouldShowStatusMonitor ? (
+              <ClusterStatusMonitor
+                region={region}
+                refresh={refreshFunc}
+                cluster={cluster}
+                setHasStatusMonitorAlert={setHasStatusMonitorAlert}
+              />
+            ) : null}
+
+            {showIDPMessage && (
+              <Split>
+                <SplitItem isFilled>
+                  <IdentityProvidersHint />
+                </SplitItem>
+              </Split>
+            )}
+            {cluster.expiration_timestamp && (
+              <ExpirationAlert expirationTimestamp={cluster.expiration_timestamp} />
+            )}
+            {trialEndDate && !isDeprovisioned && (
+              <ExpirationAlert
+                expirationTimestamp={trialEndDate}
+                {...trialExpirationUpgradeProps}
+              />
+            )}
+            {OSDRHMEndDate && !isDeprovisioned && (
+              <ExpirationAlert expirationTimestamp={OSDRHMEndDate} OSDRHMExpiration />
+            )}
+            {showGcpOrgPolicyWarning && <GcpOrgPolicyAlert summary={gcpOrgPolicyWarning} />}
+
+            <SubscriptionCompliancy
+              cluster={cluster}
+              openModal={openModal}
+              canSubscribeOCP={canSubscribeOCP}
+            />
+            {!cluster.canEdit && isAvailableAssistedInstallCluster(cluster) && (
+              <ClusterNonEditableAlert />
+            )}
+            <TransferClusterOwnershipInfo
+              subscription={cluster.subscription}
+              setHasTransferClusterOwnershipAlert={setHasTransferClusterOwnershipAlert}
+            />
+            <TermsAlert subscription={cluster.subscription} setHasTermsAlert={setHasTermsAlert} />
+            {showRecommendedOperatorsAlert ? (
+              <RecommendedOperatorsAlert
+                openLearnMore={openDrawer}
+                selectedCardTitle={selectedCardTitle}
+                closeDrawer={closeDrawer}
+                onDismissAlertCallback={() => setShowRecommendedOperatorsAlert(false)}
+                clusterState={cluster.state}
+                consoleURL={consoleURL}
+              />
+            ) : null}
+          </ExpandableSection>
+        )
       )}
-      <TransferClusterOwnershipInfo subscription={cluster.subscription} />
-      <TermsAlert subscription={cluster.subscription} />
-      {showRecommendedOperatorsAlert ? (
-        <RecommendedOperatorsAlert
-          openLearnMore={openDrawer}
-          selectedCardTitle={selectedCardTitle}
-          closeDrawer={closeDrawer}
-          onDismissAlertCallback={() => setShowRecommendedOperatorsAlert(false)}
-          clusterState={cluster.state}
-          consoleURL={consoleURL}
-        />
-      ) : null}
+
       {children}
     </div>
   );

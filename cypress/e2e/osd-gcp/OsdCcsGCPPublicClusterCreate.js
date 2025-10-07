@@ -33,6 +33,7 @@ describe(
       CreateOSDWizardPage.selectCloudProvider(clusterProperties.CloudProvider);
 
       if (clusterProperties.AuthenticationType.includes('Service Account')) {
+        CreateOSDWizardPage.serviceAccountButton().click();
         CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
       } else {
         CreateOSDWizardPage.workloadIdentityFederationButton().click();
@@ -66,8 +67,7 @@ describe(
 
     it(`OSD ${clusterProperties.CloudProvider}  wizard - Networking configuration - cluster privacy definitions`, () => {
       CreateOSDWizardPage.isNetworkingScreen();
-      CreateOSDWizardPage.clusterPrivacyPublicRadio().should('be.checked');
-      CreateOSDWizardPage.applicationIngressDefaultSettingsRadio().should('be.checked');
+      CreateOSDWizardPage.selectClusterPrivacy(clusterProperties.ClusterPrivacy);
       CreateOSDWizardPage.wizardNextButton().click();
     });
 

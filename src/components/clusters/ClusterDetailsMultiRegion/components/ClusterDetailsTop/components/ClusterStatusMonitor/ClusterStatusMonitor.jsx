@@ -11,6 +11,7 @@ import { Table, TableVariant, Tbody, Td, Th, Thead, Tr } from '@patternfly/react
 
 import { HAD_INFLIGHT_ERROR_LOCALSTORAGE_KEY } from '~/common/localStorageConstants';
 import { emailRegex } from '~/common/regularExpressions';
+import supportLinks from '~/common/supportLinks.mjs';
 import clusterStates, {
   hasInflightEgressErrors,
   isOSDGCPWaitingForRolesOnHostProject,
@@ -33,7 +34,7 @@ import { InflightCheckState } from '~/types/clusters_mgmt.v1/enums';
 
 // TODO: Part of the installation story
 const ClusterStatusMonitor = (props) => {
-  const { cluster, refresh, region } = props;
+  const { cluster, refresh, region, setHasStatusMonitorAlert } = props;
 
   const [refetchInterval, setRefetchInterval] = React.useState(false);
 
@@ -217,9 +218,8 @@ const ClusterStatusMonitor = (props) => {
           if (hasMore && !isExpanded) subnets = subnets.slice(0, 1);
           const columns = [{ title: 'Subnet' }, { title: 'URLs' }];
           const subnetRow = ({ name, egressErrors }) => (
-            <Tbody>
+            <Tbody key={name}>
               <Tr>
-                <Td />
                 <Td modifier="nowrap">{name}</Td>
                 <Td style={{ whiteSpace: 'break-spaces' }}>{egressErrors.join(',   ')}</Td>
               </Tr>
@@ -234,7 +234,6 @@ const ClusterStatusMonitor = (props) => {
               >
                 <Thead>
                   <Tr>
-                    <Th />
                     {columns.map((column) => (
                       <Th key={column.title}>{column.title}</Th>
                     ))}
@@ -261,7 +260,13 @@ const ClusterStatusMonitor = (props) => {
         // show spinner on rerun button
         const runningInflightCheck = wasRunClicked || isValidatorRunning;
         return (
-          <Alert variant="warning" isInline title="User action required">
+          <Alert
+            variant="warning"
+            isInline
+            title="User action required"
+            className="pf-v6-u-mt-md"
+            key="missing-urls-list"
+          >
             <Flex direction={{ default: 'column' }}>
               <FlexItem>{`${reason}`}</FlexItem>
               {inflightTable && <FlexItem>{inflightTable}</FlexItem>}
@@ -275,7 +280,7 @@ const ClusterStatusMonitor = (props) => {
                     </FlexItem>
                   )}
                   <FlexItem>
-                    <ExternalLink noIcon href="https://access.redhat.com/support/cases/#/case/new">
+                    <ExternalLink noIcon href={supportLinks.SUPPORT_CASE_NEW}>
                       Contact support
                     </ExternalLink>
                   </FlexItem>
@@ -336,17 +341,25 @@ const ClusterStatusMonitor = (props) => {
       ) : (
         <strong>unknown</strong>
       );
-      const reason = [];
-      reason.push('To continue cluster installation, contact the VPC owner of the ');
-      reason.push(<strong>{hostProjectId}</strong>);
-      reason.push(' host project, who must grant the ');
-      reason.push(serviceAccounts);
-      reason.push(` service account${serviceAccountsLength > 1 ? 's' : ''} the following roles: `);
-      reason.push(<strong>Compute Network Administrator, </strong>);
-      reason.push(<strong>Compute Security Administrator, </strong>);
-      reason.push(<strong>DNS Administrator.</strong>);
+
+      const reason = (
+        <>
+          To continue cluster installation, contact the VPC owner of the{' '}
+          <strong>{hostProjectId}</strong> host project, who must grant the {serviceAccounts}{' '}
+          service account{serviceAccountsLength > 1 ? 's' : ''} the following roles:{' '}
+          <strong>
+            Compute Network Administrator, Compute Security Administrator, DNS Administrator.
+          </strong>
+        </>
+      );
       return (
-        <Alert variant="warning" isInline title="Permissions needed:">
+        <Alert
+          variant="warning"
+          isInline
+          title="Permissions needed:"
+          className="pf-v6-u-mt-md"
+          key="show-required-GCP-roles"
+        >
           <Flex direction={{ default: 'column' }}>
             <FlexItem>{reason}</FlexItem>
             <FlexItem>
@@ -369,7 +382,13 @@ const ClusterStatusMonitor = (props) => {
       // Cluster install failure
       if (clusterStatus.state === clusterStates.error) {
         alerts.push(
-          <Alert variant="danger" isInline title={`${errorCode} Cluster installation failed`}>
+          <Alert
+            variant="danger"
+            isInline
+            title={`${errorCode} An error occured during cluster install or uninstall process.`}
+            className="pf-v6-u-mt-md"
+            key="cluster-install-failed"
+          >
             <p>
               This cluster cannot be recovered, however you can use the logs and network validation
               to diagnose the problem:
@@ -396,10 +415,16 @@ const ClusterStatusMonitor = (props) => {
             isInline
             title={`${errorCode} Installation is taking longer than expected`}
             data-testid="alert-long-install"
+            key="alert-long-install"
           >
             <ClusterStatusErrorDisplay clusterStatus={clusterStatus} />
           </Alert>,
         );
+      }
+
+      const filteredAlerts = alerts.filter((value) => value !== null);
+      if (filteredAlerts.length > 0 && setHasStatusMonitorAlert) {
+        setHasStatusMonitorAlert(true);
       }
       return <>{alerts.filter((n) => n)}</>;
     }
@@ -425,6 +450,7 @@ ClusterStatusMonitor.propTypes = {
     }),
   }),
   refresh: PropTypes.func,
+  setHasStatusMonitorAlert: PropTypes.func,
 };
 
 export default ClusterStatusMonitor;

@@ -36,6 +36,7 @@ describe(
       CreateOSDWizardPage.isCloudProviderSelectionScreen();
       CreateOSDWizardPage.selectCloudProvider(clusterProperties.CloudProvider);
       if (clusterProperties.AuthenticationType.includes('Service Account')) {
+        CreateOSDWizardPage.serviceAccountButton().click();
         CreateOSDWizardPage.uploadGCPServiceAccountJSON(JSON.stringify(QE_GCP));
       } else {
         CreateOSDWizardPage.workloadIdentityFederationButton().click();
@@ -60,9 +61,9 @@ describe(
       CreateOSDWizardPage.enableUserWorkloadMonitoringCheckbox().should('be.checked');
       if (clusterProperties.AdditionalEncryption.includes('Enabled')) {
         CreateOSDWizardPage.advancedEncryptionLink().click();
-        CreateOSDWizardPage.enableAdditionalEtcdEncryptionCheckbox().check();
+        CreateOSDWizardPage.enableAdditionalEtcdEncryptionCheckbox().check({ force: true });
         if (clusterProperties.FIPSCryptography.includes('Enabled')) {
-          CreateOSDWizardPage.enableFIPSCryptographyCheckbox().check();
+          CreateOSDWizardPage.enableFIPSCryptographyCheckbox().check({ force: true });
         }
         if (clusterProperties.EncryptVolumesWithCustomKeys.includes('Enabled')) {
           CreateOSDWizardPage.useCustomKMSKeyRadio().check();

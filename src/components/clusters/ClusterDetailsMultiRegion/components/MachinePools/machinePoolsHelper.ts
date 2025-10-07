@@ -2,7 +2,7 @@ import { normalizeProductID } from '~/common/normalize';
 import { normalizedProducts } from '~/common/subscriptionTypes';
 import { isHypershiftCluster } from '~/components/clusters/common/clusterStates';
 import { MachineTypesResponse } from '~/queries/types';
-import { GlobalState } from '~/redux/store';
+import { GlobalState } from '~/redux/stateTypes';
 import { Cluster, MachinePool, NodePool } from '~/types/clusters_mgmt.v1';
 import { ClusterFromSubscription } from '~/types/types';
 
@@ -146,16 +146,18 @@ const isMinimumCountWithoutTaints = ({
   currentMachinePoolId,
   machinePools,
   cluster,
+  includeCurrentMachinePool = false,
 }: {
   currentMachinePoolId?: string;
   machinePools: MachinePool[];
   cluster: ClusterFromSubscription;
+  includeCurrentMachinePool?: boolean;
 }) => {
   if (!isHypershiftCluster(cluster)) {
     return true; // This only applies to HCP clusters
   }
 
-  const numberReplicas = machinePools?.reduce((count, pool) => {
+  let numberReplicas = machinePools?.reduce((count, pool) => {
     if (pool.id !== currentMachinePoolId) {
       if (!pool.taints?.length) {
         return count + (pool.autoscaling?.min_replicas ?? pool.replicas ?? 0);
@@ -163,6 +165,15 @@ const isMinimumCountWithoutTaints = ({
     }
     return count;
   }, 0);
+
+  if (
+    includeCurrentMachinePool &&
+    currentMachinePoolId &&
+    !machinePools.find((pool) => pool.id === currentMachinePoolId)?.taints?.length
+  ) {
+    // The minimum the current machine pool can have is 1 so adding it if the method is using to count total nodes
+    numberReplicas += 1;
+  }
 
   return numberReplicas >= 2;
 };
@@ -264,6 +275,10 @@ const getSubnetIds = (machinePoolOrNodePool: MachinePool | NodePool) => {
 const hasSubnets = (machinePoolOrNodePool: MachinePool | NodePool) =>
   getSubnetIds(machinePoolOrNodePool).length > 0;
 
+const hasAwsTags = (machinePoolOrNodePool: NodePool) =>
+  machinePoolOrNodePool.aws_node_pool?.tags &&
+  Object.keys(machinePoolOrNodePool.aws_node_pool?.tags).length > 0;
+
 const getClusterMinNodes = ({
   cluster,
   machineTypesResponse,
@@ -280,6 +295,7 @@ const getClusterMinNodes = ({
       currentMachinePoolId: machinePool?.id,
       cluster,
       machinePools,
+      includeCurrentMachinePool: true,
     })
       ? 1
       : 2;
@@ -344,4 +360,5 @@ export {
   isEnforcedDefaultMachinePool,
   isMinimumCountWithoutTaints,
   normalizeNodePool,
+  hasAwsTags,
 };
