@@ -76,6 +76,10 @@
           "UserID": "ocmcypress2",
           "Group": "cluster-admins"
         },
+        "email-user": {
+          "UserID": "ocm-test-user@redhat.com",
+          "Group": "cluster-admins"
+        },
         "Validations": {
           "UserID": {
             "EmptyError": "User ID cannot be empty.",

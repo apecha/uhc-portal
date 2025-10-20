@@ -2,7 +2,7 @@ import Page from './page';
 
 class ClusterRolesAndAccess extends Page {
   addRoleButton = () => cy.get('button').contains('Add user');
-  rolesTab = () => cy.get('butotn[aria-constrols="rolesTabContent"]');
+  rolesTab = () => cy.get('button[aria-controls="rolesTabContent"]');
   clusterRolesAndAccessTab = () => cy.get('button[role="tab"').contains('Cluster Roles and Access');
 
   addUserModalTitle = () => cy.contains('h1', 'Add cluster user');

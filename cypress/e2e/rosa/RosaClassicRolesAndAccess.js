@@ -109,5 +109,19 @@ describe(
       ClusterRolesAndAccess.deleteUser(userDetails['cluster-admin-user'].UserID);
       ClusterRolesAndAccess.verifyUserNotInList(userDetails['cluster-admin-user'].UserID);
     });
+
+    it(`Step - Add a new email user for ${ClusterName} and verify it appear in the list`, () => {
+      ClusterRolesAndAccess.addRoleButton().click();
+      ClusterRolesAndAccess.userIDInput().type(userDetails['email-user'].UserID);
+      ClusterRolesAndAccess.clusterAdminsCheck().check();
+      ClusterRolesAndAccess.addUserModalButton().click();
+      ClusterRolesAndAccess.waitForClosingModal();
+      ClusterRolesAndAccess.verifyUserInList(
+        userDetails['email-user'].UserID,
+        userDetails['email-user'].Group,
+      );
+      ClusterRolesAndAccess.deleteUser(userDetails['email-user'].UserID);
+      ClusterRolesAndAccess.verifyUserNotInList(userDetails['email-user'].UserID);
+    });
   },
 );
