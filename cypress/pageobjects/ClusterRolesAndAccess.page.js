@@ -15,7 +15,7 @@ class ClusterRolesAndAccess extends Page {
     cy.get('div[role="dialog"]').find('button[data-testid="btn-secondary"]');
 
   getUserIDErrorText = () => {
-    return cy.get('div[role="dialog"]').find('[class*="helper-text__item"][class*="pf-m-error"]');
+    return cy.getByTestId('form-helper-error');
   };
 
   verifyUserInList(userID, group) {
