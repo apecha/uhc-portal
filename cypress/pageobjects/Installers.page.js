@@ -45,7 +45,7 @@ class Installers {
   }
 
   verifyPageTitle(expectedTitle) {
-    this.getPageTitle().should('contain', expectedTitle);
+    this.getPageTitle().should('be.visible', { timeout: 10000 }).should('contain', expectedTitle);
   }
 
   verifyDocumentationLink(linkElement, expectedPath, linkType = 'documentation', expectedVersion) {

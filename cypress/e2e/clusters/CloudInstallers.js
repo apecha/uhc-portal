@@ -1,28 +1,27 @@
 import InstallersPage from '../../pageobjects/Installers.page';
 import installerData from '../../fixtures/installer/CloudInstaller.json';
+import { getCurrentOpenshiftVersion } from '../../support/versionUtils';
 
 describe('Installer Subpage Component Tests', { tags: ['smoke'] }, () => {
   let currentVersion;
   before(() => {
-    cy.request(
-      'https://access.redhat.com/product-life-cycles/api/v1/products?name=Openshift+Container+Platform+4',
-    ).then((response) => {
-      currentVersion = response.body.data[0].versions[0].name;
+    getCurrentOpenshiftVersion().then((version) => {
+      currentVersion = version;
     });
   });
 
   installerData.installerSubpages.forEach((testData, index) => {
     describe(`Verification for: ${testData.name}`, () => {
+      // before(() => {
+      //   if (index > 0) {
+      //     // Clear memory between test suites
+      //     cy.window().then((win) => {
+      //       win.location.href = 'about:blank';
+      //     });
+      //     cy.clearCookies();
+      //     cy.clearLocalStorage();
+      //   }
       before(() => {
-        if (index > 0) {
-          // Clear memory between test suites
-          cy.window().then((win) => {
-            win.location.href = 'about:blank';
-          });
-          cy.clearCookies();
-          cy.clearLocalStorage();
-        }
-
         cy.visit(testData.url);
         InstallersPage.verifyPageTitle(testData.expectedTitle);
       });
