@@ -12,6 +12,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 
+import { refetchAccessRequests } from '~/queries/ClusterDetailsQueries/AccessRequestTab/useFetchAccessRequests';
 import {
   refetchClusterTransferDetail,
   useFetchClusterTransferDetail,
@@ -44,6 +45,7 @@ export const ClustersPageHeader = () => {
   const refresh = () => {
     refetch();
     refetchClusterTransferDetail();
+    refetchAccessRequests();
   };
 
   return (
