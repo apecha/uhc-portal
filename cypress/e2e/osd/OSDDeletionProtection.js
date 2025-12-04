@@ -1,7 +1,7 @@
 import ClusterListPage from '../../pageobjects/ClusterList.page';
 import ClusterDetails from '../../pageobjects/ClusterDetails.page';
 
-const clusterProfiles = require('../../fixtures/rosa/RosaClusterClassicCreatePublic.json');
+const clusterProfiles = require('../../fixtures/osd/OsdCcsClusterProperties');
 const ClusterName = clusterProfiles['Clusters'][0]['ClusterName'];
 
 describe(
